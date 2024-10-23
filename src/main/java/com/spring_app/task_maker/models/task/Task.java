@@ -1,8 +1,8 @@
 package com.spring_app.task_maker.models.task;
 
-
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,9 +16,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name="tasks")
-public class Task{
-    
+@Table(name = "tasks")
+public class Task {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -26,19 +26,22 @@ public class Task{
     @NotEmpty(message = "El titulo es obligatorio")
     @Column(unique = true)
     private String title;
+
+    
     private String description;
 
-
     @NotNull(message = "El campo 'activo' es requerido")
-    private boolean completed;
+    private Boolean completed;
 
     @Enumerated(EnumType.STRING)
     private Priority priority;
-    
+
+
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd") 
+    @NotNull(message = "La fecha no puede ser nula")
     @Column(name = "fecha")
-    private LocalDate dueDate; 
-
-
+    private LocalDate dueDate;
 
     public Integer getId() {
         return id;
@@ -80,14 +83,12 @@ public class Task{
         this.priority = priority;
     }
 
-    public LocalDate  getDueDate() {
+    public LocalDate getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDate  dueDate) {
+    public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
     }
 
-
-    
 }

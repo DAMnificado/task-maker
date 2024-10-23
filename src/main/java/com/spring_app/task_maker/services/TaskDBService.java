@@ -2,7 +2,6 @@ package com.spring_app.task_maker.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,12 +10,13 @@ import com.spring_app.task_maker.models.task.Task;
 import com.spring_app.task_maker.models.task.TaskDTO;
 import com.spring_app.task_maker.models.task.TaskMapper;
 import com.spring_app.task_maker.repositories.TaskRepository;
+import com.spring_app.task_maker.utils.messages.TaskMessage;
 
 @Service
 public class TaskDBService {
 
-    private TaskRepository rep;
-    private TaskMapper mapper;
+    private final TaskRepository rep;
+    private final TaskMapper mapper;
 
     public TaskDBService(TaskRepository rep, TaskMapper mapper) {
         this.rep = rep;
@@ -47,7 +47,40 @@ public class TaskDBService {
                 .collect(Collectors.toList());
     }
 
-    public Task createTask(Task task) {
-        return rep.save(task);
+    public TaskMessage createTask(Task task) {
+        Task savedTask = rep.save(task); 
+        TaskMessage createMessage = new TaskMessage("Tarea creada con éxito", savedTask);
+        return createMessage;
     }
-}
+
+
+    public void deleteTask(Integer id) {
+        Task taskFound = rep.findById(id).orElse(null);
+     
+        rep.delete(taskFound);
+      
+    }
+
+
+    public TaskMessage updateTask(Integer id, Task task) {
+
+        Task taskFound = rep.findById(id).orElse(null);
+        
+        if (taskFound != null) {
+            taskFound.setTitle(task.getTitle());
+            taskFound.setDescription(task.getDescription());
+            taskFound.setPriority(task.getPriority());
+            taskFound.setDueDate(task.getDueDate());
+            taskFound.setCompleted(task.isCompleted());  
+        }
+
+        rep.save(taskFound);
+       return new TaskMessage("Actualizada", taskFound);
+       
+    
+    }
+    
+
+
+    }
+

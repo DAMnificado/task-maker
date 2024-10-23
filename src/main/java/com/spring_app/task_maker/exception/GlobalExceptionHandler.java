@@ -1,15 +1,18 @@
 package com.spring_app.task_maker.exception;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.NoHandlerFoundException;
+
+
+import java.util.HashMap;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,29 +24,47 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(message);
     }
 
-    // Manejo de excepciones para URL no encontradas
-    @ExceptionHandler(NoHandlerFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Recurso no encontrado");
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
+   
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason()); // Envía el mensaje personalizado
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        StringBuilder message = new StringBuilder("Validation error: ");
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            message.append(String.format("%s: %s; ", error.getField(), error.getDefaultMessage()));
-        }
-        return ResponseEntity.badRequest().body(message.toString());
+   @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<HashMap<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        HashMap<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+  
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<String> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Error de deserialización: " + ex.getMostSpecificCause().getMessage());
     }
 
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<String> handleInvalidDataAccessApiUsageException(InvalidDataAccessApiUsageException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("No se ha podido encontrar la tarea.");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("No se ha podido encontrar la tarea aaaa.");
+    }
+    
+
+     
+
+    
     // Clase interna para la respuesta de error
     static class ErrorResponse {
         private int status;
